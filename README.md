@@ -1,6 +1,7 @@
 # Project Name
 
-(short, 1-3 sentenced, description of the project)
+This repository demonstrates how to integrate vector search capabilities into a Cosmos DB database using TypeScript.
+
 
 ## Features
 
@@ -14,11 +15,12 @@ This project framework provides the following features:
 
 ### Prerequisites
 
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
+- Use the Azure Agent Service [deployment](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/environment-setup) to get your resources created.
+    - Azure AI Foundry
+    - Azure AI Foundry project
+    - Azure Cosmos DB
+    - Azure Search
+    - Azure Storage
 
 ### Installation
 

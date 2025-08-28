@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# TypeScript
+dist/
+build/
+node_modules/
