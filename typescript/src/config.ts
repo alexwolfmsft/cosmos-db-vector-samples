@@ -1,5 +1,4 @@
 // Structured configuration for the application
-console.log(process.env);
 
 export const config = {
     // Azure OpenAI configuration
@@ -33,8 +32,9 @@ export const config = {
     
     // Data file paths
     data: {
-        file: process.env.DATA_FILE_WITHOUT_VECTORS || '../data/product.json',
-        fileWithVectors: process.env.DATA_FILE_WITH_VECTORS || '../data/product3.json',
+        file: process.env.DATA_FILE_WITHOUT_VECTORS,
+        fileWithVectors: process.env.DATA_FILE_WITH_VECTORS,
+        fileWithSimilarity: process.env.DATA_FILE_WITH_SIMILARITY
     },
 
     // Embedding configuration
@@ -55,4 +55,9 @@ export const config = {
     // Debug settings
     debug: process.env.DEBUG === "true" || false,
 
+    // request settings
+    request: {
+        timeout: parseInt(process.env.REQUEST_TIMEOUT || '200', 10),
+        retries: parseInt(process.env.REQUEST_RETRIES || '3', 10),
+    }
 };
