@@ -29,9 +29,11 @@ async function main() {
         await dbClient.connect();
         const db = dbClient.db(config.dbName);
         const collection = await db.createCollection(config.collectionName);
+        console.log('Created collection:', config.collectionName);
         const data = await readFileReturnJson(path.join(__dirname, "..", config.dataFile));
         const insertSummary = await insertData(config, collection, data);
-
+        console.log('Created vector index:', config.indexName);
+        
         // Create the vector index
         const indexOptions = {
             createIndexes: config.collectionName,
