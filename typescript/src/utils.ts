@@ -12,9 +12,9 @@ export const scoreProperty = {
         nestedProperty: null
     },
     hnsw: {
-        property: '__cosmos_meta__',
-        inDoc: true,
-        nestedProperty: 'score'
+        property: 'score',
+        inDoc: false,
+        nestedProperty: null
     },
     diskann: {
         property: '__cosmos_meta__',
@@ -113,7 +113,7 @@ export async function insertData(config, collection, data) {
 }
 
 export function printSearchResults(insertSummary, indexSummary, searchResults, vectorType) {
-    console.log('--- Summary ---');
+    console.log(`--- Summary ${vectorType} ---`);
     console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
     console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
     
