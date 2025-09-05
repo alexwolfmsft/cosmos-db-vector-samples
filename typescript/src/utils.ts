@@ -5,6 +5,21 @@ import { promises as fs } from "fs";
 // Define a type for JSON data
 export type JsonData = Record<string, any>;
 
+export const scoreProperty = {
+    ivf: {
+        property: 'score',
+        inDoc: false
+    },
+    hnsw: {
+        property: '__cosmos_meta__',
+        inDoc: true
+    },
+    diskann: {
+        property: 'score',
+        inDoc: false
+    }
+}
+
 export function getClients(): { aiClient: AzureOpenAI; dbClient: MongoClient } {
     const apiKey = process.env.AZURE_OPENAI_EMBEDDING_KEY!;
     const apiVersion = process.env.AZURE_OPENAI_EMBEDDING_API_VERSION!;
@@ -93,7 +108,8 @@ export async function insertData(config, collection, data) {
 
     return { total: data.length, inserted, updated, skipped, failed };
 }
-export function printSearchResults(insertSummary, indexSummary, searchResults) {
+
+export function printIvfSearchResults(insertSummary, indexSummary, searchResults) {
     console.log('--- Summary ---');
     console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
     console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
@@ -103,6 +119,7 @@ export function printSearchResults(insertSummary, indexSummary, searchResults) {
 
         // Process results to combine document fields with score
         const processedResults = searchResults.map(result => {
+            
             // Extract the document and score
             const { document, score } = result as any;
 
@@ -115,6 +132,36 @@ export function printSearchResults(insertSummary, indexSummary, searchResults) {
 
         processedResults.forEach((result, index) => {
             console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.score.toFixed(4)}`);
+            //console.log(`   Description: ${result.Description}`);
+        });
+
+    }
+}
+export function printHnswSearchResults(insertSummary, indexSummary, searchResults) {
+    console.log('--- Summary ---');
+    console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
+    console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
+    //console.log(`Search Results: ${JSON.stringify(searchResults)}`);
+    if (searchResults) {
+        //console.log(`Raw results: ${JSON.stringify(searchResults, null, 2)}`);
+
+        searchResults.forEach((result, index) => {
+            console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.__cosmos_meta__.score.toFixed(4)}`);
+            //console.log(`   Description: ${result.Description}`);
+        });
+
+    }
+}
+export function printDiskannSearchResults(insertSummary, indexSummary, searchResults) {
+    console.log('--- Summary ---');
+    console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
+    console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
+    //console.log(`Search Results: ${JSON.stringify(searchResults)}`);
+    if (searchResults) {
+        //console.log(`Raw results: ${JSON.stringify(searchResults, null, 2)}`);
+
+        searchResults.forEach((result, index) => {
+            console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.__cosmos_meta__.score.toFixed(4)}`);
             //console.log(`   Description: ${result.Description}`);
         });
 

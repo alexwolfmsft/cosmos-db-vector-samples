@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFileReturnJson, getClients, insertData, printSearchResults } from './utils.js';
+import { readFileReturnJson, getClients, insertData, printIvfSearchResults } from './utils.js';
 
 // ESM specific features - create __dirname equivalent
 import { fileURLToPath } from "node:url";
@@ -82,7 +82,7 @@ async function main() {
         ]).toArray();
 
         // Print the results
-        printSearchResults(insertSummary, vectorIndexSummary, searchResults);
+        printIvfSearchResults(insertSummary, vectorIndexSummary, searchResults);
 
     } catch (error) {
         console.error('App failed:', error);
