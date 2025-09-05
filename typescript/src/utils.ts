@@ -8,15 +8,18 @@ export type JsonData = Record<string, any>;
 export const scoreProperty = {
     ivf: {
         property: 'score',
-        inDoc: false
+        inDoc: false,
+        nestedProperty: null
     },
     hnsw: {
         property: '__cosmos_meta__',
-        inDoc: true
+        inDoc: true,
+        nestedProperty: 'score'
     },
     diskann: {
-        property: 'score',
-        inDoc: false
+        property: '__cosmos_meta__',
+        inDoc: true,
+        nestedProperty: 'score'
     }
 }
 
@@ -109,61 +112,62 @@ export async function insertData(config, collection, data) {
     return { total: data.length, inserted, updated, skipped, failed };
 }
 
-export function printIvfSearchResults(insertSummary, indexSummary, searchResults) {
+export function printSearchResults(insertSummary, indexSummary, searchResults, vectorType) {
     console.log('--- Summary ---');
     console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
     console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
-    //console.log(`Search Results: ${JSON.stringify(searchResults)}`);
-    if (searchResults) {
-        //console.log(`Raw results: ${JSON.stringify(searchResults, null, 2)}`);
-
-        // Process results to combine document fields with score
-        const processedResults = searchResults.map(result => {
-            
+    
+    if (!searchResults || searchResults.length === 0) {
+        console.log('No search results found.');
+        return;
+    }
+    
+    // Get the score property configuration based on vector type
+    const scoreConfig = scoreProperty[vectorType.toLowerCase()];
+    
+    if (!scoreConfig) {
+        console.error(`Unknown vector type: ${vectorType}`);
+        return;
+    }
+    
+    // Process results based on the vector type
+    let processedResults = searchResults;
+    
+    // For IVF, we need to process the results differently as they come in a different format
+    if (vectorType.toLowerCase() === 'ivf') {
+        processedResults = searchResults.map(result => {
             // Extract the document and score
             const { document, score } = result as any;
-
+            
             // Return combined object with all document fields and score
             return {
                 ...document,
                 score
             };
         });
-
-        processedResults.forEach((result, index) => {
-            console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.score.toFixed(4)}`);
-            //console.log(`   Description: ${result.Description}`);
-        });
-
     }
-}
-export function printHnswSearchResults(insertSummary, indexSummary, searchResults) {
-    console.log('--- Summary ---');
-    console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
-    console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
-    //console.log(`Search Results: ${JSON.stringify(searchResults)}`);
-    if (searchResults) {
-        //console.log(`Raw results: ${JSON.stringify(searchResults, null, 2)}`);
+    
+    // Print results with appropriate score access based on configuration
+    processedResults.forEach((result, index) => {
+        let score;
+        
+        // IVF
+        if (scoreConfig.inDoc) {
+            // Score is nested within a property (like __cosmos_meta__.score)
+            if (scoreConfig.nestedProperty) {
+                score = result[scoreConfig.property][scoreConfig.nestedProperty];
+            } else {
+                score = result[scoreConfig.property];
+            }
+        } else {
 
-        searchResults.forEach((result, index) => {
-            console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.__cosmos_meta__.score.toFixed(4)}`);
-            //console.log(`   Description: ${result.Description}`);
-        });
+            // DiskANN and HNSW
 
-    }
-}
-export function printDiskannSearchResults(insertSummary, indexSummary, searchResults) {
-    console.log('--- Summary ---');
-    console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
-    console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
-    //console.log(`Search Results: ${JSON.stringify(searchResults)}`);
-    if (searchResults) {
-        //console.log(`Raw results: ${JSON.stringify(searchResults, null, 2)}`);
-
-        searchResults.forEach((result, index) => {
-            console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${result.__cosmos_meta__.score.toFixed(4)}`);
-            //console.log(`   Description: ${result.Description}`);
-        });
-
-    }
+            // Score is directly on the result object
+            score = result[scoreConfig.property];
+        }
+        
+        console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${score.toFixed(4)}`);
+        //console.log(`   Description: ${result.Description}`);
+    });
 }

@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFileReturnJson, getClients, insertData, printHnswSearchResults } from './utils.js';
+import { readFileReturnJson, getClients, insertData, printSearchResults } from './utils.js';
 
 // ESM specific features - create __dirname equivalent
 import { fileURLToPath } from "node:url";
@@ -73,7 +73,7 @@ async function main() {
         ]).toArray();
 
         // Print the results
-        printHnswSearchResults(insertSummary, vectorIndexSummary, searchResults);
+        printSearchResults(insertSummary, vectorIndexSummary, searchResults, 'hnsw');
 
     } catch (error) {
         console.error('App failed:', error);
