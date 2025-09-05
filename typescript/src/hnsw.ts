@@ -1,8 +1,5 @@
 import path from 'path';
-import { readFileReturnJson } from './files.js';
-import { getClients } from './clients.js';
-import { insertData } from './insert-data.js';
-import { printSearchResults } from './print-search-results.js';
+import { readFileReturnJson, getClients, insertData, printSearchResults } from './utils.js';
 
 // ESM specific features - create __dirname equivalent
 import { fileURLToPath } from "node:url";

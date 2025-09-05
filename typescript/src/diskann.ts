@@ -1,8 +1,5 @@
 import path from 'path';
-import { readFileReturnJson } from './files.js';
-import { getClients } from './clients.js';
-import { insertData } from './insert-data.js';
-import { printSearchResults } from './print-search-results.js';
+import { readFileReturnJson, getClients, insertData, printSearchResults } from './utils.js';
 
 // ESM specific features - create __dirname equivalent
 import { fileURLToPath } from "node:url";
@@ -13,8 +10,8 @@ const __dirname = dirname(__filename);
 const config = {
     query: "find a hotel by a lake with a mountain view",
     dbName: "Hotels",
-    collectionName: "hotels_hnsw",
-    indexName: "vectorIndex_hnsw",
+    collectionName: "hotels_diskann",
+    indexName: "vectorIndex_diskann",
     dataFile: process.env.DATA_FILE_WITH_VECTORS!,
     batchSize: parseInt(process.env.LOAD_SIZE_BATCH! || '100', 10),
     embeddingField: process.env.EMBEDDED_FIELD!,
