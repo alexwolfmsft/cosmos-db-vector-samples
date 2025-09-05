@@ -1,23 +1,19 @@
 import { MongoClient} from 'mongodb';
-
 const config = {
     connectionString: process.env.MONGO_CONNECTION_STRING!,
-    dbName: "HotelSet_ivf",
-    collectionName: process.env.MONGO_COLLECTION!,
+    dbName: "HotelSet",
+    collectionName: "hotels",
     embeddedField: process.env.EMBEDDED_FIELD!,
     embeddingDimensions: parseInt(process.env.EMBEDDING_DIMENSIONS!, 10),
     indexName: "vectorIndex_ivf"
 };
-
 const mongoSearchOptions = {
     kind: 'vector-ivf',
     numLists: 1,
     similarity: 'COS',
     dimensions: config.embeddingDimensions
 };
-
 async function main(): Promise<void> {
-
     const client = new MongoClient(config.connectionString, {
         maxPoolSize: 5,
         minPoolSize: 1,
@@ -25,7 +21,6 @@ async function main(): Promise<void> {
         connectTimeoutMS: 30000,
         socketTimeoutMS: 360000
     });
-
     try {
         await client.connect();
         const db = client.db(config.dbName);
@@ -54,8 +49,6 @@ async function main(): Promise<void> {
         console.log('Database connection closed');
     }
 }
-
-
 main().catch(err => {
     console.error('Unhandled error:', err);
     process.exitCode = 1;

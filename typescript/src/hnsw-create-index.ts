@@ -2,8 +2,8 @@ import { MongoClient, Db } from 'mongodb';
 
 const config = {
     connectionString: process.env.MONGO_CONNECTION_STRING!,
-    dbName: "HotelSet_hnsw",
-    collectionName: process.env.MONGO_COLLECTION!,
+    dbName: "HotelSet",
+    collectionName: "hotels",
     embeddedField: process.env.EMBEDDED_FIELD!,
     embeddingDimensions: parseInt(process.env.EMBEDDING_DIMENSIONS!, 10),
     indexName: "vectorIndex_hnsw"

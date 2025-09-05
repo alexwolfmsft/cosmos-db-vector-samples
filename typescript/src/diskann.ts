@@ -13,8 +13,8 @@ const __dirname = dirname(__filename);
 const config = {
     query: "find a hotel by a lake with a mountain view",
     dbName: "Hotels",
-    collectionName: "hotels_ivf",
-    indexName: "vectorIndex_ivf",
+    collectionName: "hotels_hnsw",
+    indexName: "vectorIndex_hnsw",
     dataFile: process.env.DATA_FILE_WITH_VECTORS!,
     batchSize: parseInt(process.env.LOAD_SIZE_BATCH! || '100', 10),
     embeddingField: process.env.EMBEDDED_FIELD!,
@@ -45,10 +45,11 @@ async function main() {
                         [config.embeddedField]: 'cosmosSearch'
                     },
                     cosmosSearchOptions: {
-                        kind: 'vector-ivf',
-                        numLists: 1,
-                        similarity: 'COS',
-                        dimensions: config.embeddingDimensions
+                        kind: 'vector-diskann',
+                        dimensions: config.embeddingDimensions,
+                        similarity: 'COS', // 'COS', 'L2', 'IP'
+                        maxDegree: 20, // 20 - 2048,  edges per node
+                        lBuild: 10 // 10 - 500, candidate neighbors evaluated
                     }
                 }
             ]
@@ -69,19 +70,9 @@ async function main() {
                         vector: createEmbeddedForQueryResponse.data[0].embedding,
                         path: config.embeddedField,
                         k: 5
-                    },
-                    returnStoredSource: true
-                }
-            },
-            {
-                $project: {
-                    score: {
-                        $meta: "searchScore"
-                    },
-                    document: "$$ROOT"
+                    }
                 }
             }
-
         ]).toArray();
 
         // Print the results

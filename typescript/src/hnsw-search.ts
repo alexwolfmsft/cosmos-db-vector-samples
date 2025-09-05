@@ -62,7 +62,7 @@ async function main(): Promise<void> {
 
         // Execute the aggregation pipeline
         const results = await collection.aggregate(pipeline).toArray();
-
+        console.log("Final pipeline:", JSON.stringify(pipeline, null, 2));
         if (results) {
             console.log(`Raw results: ${JSON.stringify(results, null, 2)}`);
 

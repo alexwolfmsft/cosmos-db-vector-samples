@@ -7,18 +7,22 @@
     "build": "tsc",
     "start:one-insert": "node --env-file .env dist/insert-one-document.js",
     "start:embed": "node --env-file .env dist/create-embeddings.js",
+    
     "start:load": "node --env-file .env dist/load.js",
-    "start:create-ivf-index": "node --env-file .env dist/create-embeddings-index-ivf.js",
-    "start:create-hnsw-index": "node --env-file .env dist/create-embeddings-index-hnsw.js",
-    "start:create-diskann-index": "node --env-file .env dist/create-embeddings-index-diskann.js",
+
+    "start:ivf-create-index": "node --env-file .env dist/ivf-create-index.js",
+    "start:hnsw-create-index": "node --env-file .env dist/hnsw-create-index.js",
+    "start:diskann-create-index": "node --env-file .env dist/diskann-create-index.js",
 
     "start:embed-query": "node --env-file .env dist/create-embeddings-query.js",
+
     "start:search-ivf": "node --env-file .env dist/ivf-search.js",
     "start:search-hnsw": "node --env-file .env dist/hnsw-search.js",
     "start:search-diskann": "node --env-file .env dist/diskann-search.js",
 
     "start:show-indexes": "node --env-file .env dist/showIndexes.js",
-    "start:similarity": "node --env-file .env dist/find-similarity.js"
+    "start:similarity": "node --env-file .env dist/find-similarity.js",
+    "start:ivf": "node --env-file .env dist/ivf.js"
   },
   "dependencies": {
     "@azure/ai-agents": "^1.1.0",
