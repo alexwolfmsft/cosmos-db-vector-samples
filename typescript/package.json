@@ -8,6 +8,16 @@
     "start:one-insert": "node --env-file .env dist/insert-one-document.js",
     "start:embed": "node --env-file .env dist/create-embeddings.js",
     "start:load": "node --env-file .env dist/load.js",
+    "start:create-ivf-index": "node --env-file .env dist/create-embeddings-index-ivf.js",
+    "start:create-hnsw-index": "node --env-file .env dist/create-embeddings-index-hnsw.js",
+    "start:create-diskann-index": "node --env-file .env dist/create-embeddings-index-diskann.js",
+
+    "start:embed-query": "node --env-file .env dist/create-embeddings-query.js",
+    "start:search-ivf": "node --env-file .env dist/ivf-search.js",
+    "start:search-hnsw": "node --env-file .env dist/hnsw-search.js",
+    "start:search-diskann": "node --env-file .env dist/diskann-search.js",
+
+    "start:show-indexes": "node --env-file .env dist/showIndexes.js",
     "start:similarity": "node --env-file .env dist/find-similarity.js"
   },
   "dependencies": {

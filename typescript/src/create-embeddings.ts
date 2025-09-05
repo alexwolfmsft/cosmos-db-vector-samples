@@ -6,7 +6,6 @@
 import * as path from "node:path";
 import { AzureOpenAI } from "openai";
 import { Embedding } from "openai/resources";
-import { config } from './config.js';
 import { readFileReturnJson, writeFileJson, JsonData } from "./files.js";
 
 // ESM specific features - create __dirname equivalent
@@ -15,33 +14,21 @@ import { dirname } from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const appConfig = config;
-
 const apiKey = process.env.AZURE_OPENAI_EMBEDDING_KEY;
 const apiVersion = process.env.AZURE_OPENAI_EMBEDDING_API_VERSION;
 const endpoint = process.env.AZURE_OPENAI_EMBEDDING_ENDPOINT;
 console.log(`Using OpenAI endpoint: ${endpoint}`);
-const deployment = process.env.AZURE_OPENAI_EMBEDDING_MODEL;
+const deployment = process.env.AZURE_OPENAI_EMBEDDING_MODEL!;
+
+const dataWithVectors = process.env.DATA_FILE_WITH_VECTORS!;
+const dataWithoutVectors = process.env.DATA_FILE_WITHOUT_VECTORS!;
+const fieldToEmbed = process.env.FIELD_TO_EMBED! || "description";
+const newEmbeddedField = process.env.EMBEDDED_FIELD! || deployment;
+const batchSize = parseInt(process.env.EMBEDDING_BATCH_SIZE || '16', 10);
 
 // Define a reusable delay function
-async function delay(ms: number = config.request.timeout || 200): Promise<void> {
+async function delay(ms: number = 200): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, ms));
-}
-
-await delay();
-
-export function createAzureOpenAIClient(): AzureOpenAI {
-
-
-    const config = {
-        apiKey,
-        apiVersion,
-        endpoint,
-        deployment
-    };
-    console.log("Azure OpenAI Client Config:", config);
-
-    return new AzureOpenAI(config);
 }
 
 export async function createEmbeddings(client: AzureOpenAI, model: string, inputItems: string[]): Promise<Embedding[]> {
@@ -77,8 +64,8 @@ export async function processEmbeddingBatch<T>(
     maxEmbeddings = maxEmbeddings || items.length;
 
     // Process in batches to avoid rate limits and memory issues
-    for (let i = 0; i < maxEmbeddings; i += appConfig.model_embedding.batchSize) {
-        const batchEnd = Math.min(i + appConfig.model_embedding.batchSize, items.length);
+    for (let i = 0; i < maxEmbeddings; i += batchSize) {
+        const batchEnd = Math.min(i + batchSize, items.length);
         console.log(`Processing batch: ${i} to ${batchEnd - 1} (of ${items.length} items)`);
 
         const batchItems = items.slice(i, batchEnd);
@@ -118,13 +105,16 @@ export async function processEmbeddingBatch<T>(
 
 try {
 
-    const client = createAzureOpenAIClient();
+    const client =  new AzureOpenAI( {
+        apiKey,
+        apiVersion,
+        endpoint,
+        deployment
+    });
 
-    const data = await readFileReturnJson(path.join(__dirname, "..", appConfig.data.file!));
-    const model = config.model_embedding.deployment;
-    const fieldToEmbed = config.embeddings.fieldToEmbed;
-    const newEmbeddedField = config.embeddings.embeddedField;
-    const maxEmbeddings = data.length; // Or set to a specific number for testing
+    const data = await readFileReturnJson(path.join(__dirname, "..", dataWithoutVectors!));
+    const model = deployment;
+    const maxEmbeddings = data.length; 
 
     const embeddings = await processEmbeddingBatch<JsonData>(
         client,
@@ -135,7 +125,7 @@ try {
         data
     );
 
-    await writeFileJson(path.join(__dirname, "..", appConfig.data.fileWithVectors!), embeddings);
+    await writeFileJson(path.join(__dirname, "..", dataWithVectors!), embeddings);
 
 } catch (error) {
     console.error(`Failed to save embeddings to file: ${(error as Error).message}`);

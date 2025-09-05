@@ -10,11 +10,12 @@
         "skipLibCheck": true,
         "noImplicitAny": false,
         "forceConsistentCasingInFileNames": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "resolveJsonModule": true,
     },
     "include": [
         "src/**/*"
-, "../examples", "../examples", "old/insert-uuid-document.ts", "old/show-indexes.ts", "old/load.ts", "old/load-data-and-index.ts", "old/insert-one-document.ts", "old/create-vector-index.ts", "old/create-vector-embedding.ts", "old/count-dimensions.ts", "old"    ],
+    ],
     "exclude": [
         "node_modules",
         "dist"
