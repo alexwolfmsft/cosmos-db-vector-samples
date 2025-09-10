@@ -1,28 +1,18 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, OIDCResponse, OIDCCallbackParams } from 'mongodb';
 import { AzureOpenAI } from 'openai/index.js';
 import { promises as fs } from "fs";
+import { AccessToken, DefaultAzureCredential, TokenCredential, getBearerTokenProvider } from '@azure/identity';
 
 // Define a type for JSON data
 export type JsonData = Record<string, any>;
 
-export const scoreProperty = {
-    ivf: {
-        property: 'score',
-        inDoc: false,
-        nestedProperty: null
-    },
-    hnsw: {
-        property: 'score',
-        inDoc: false,
-        nestedProperty: null
-    },
-    diskann: {
-        property: '__cosmos_meta__',
-        inDoc: true,
-        nestedProperty: 'score'
-    }
-}
-
+export const AzureIdentityTokenCallback = async (params: OIDCCallbackParams, credential: TokenCredential): Promise<OIDCResponse> => {
+    const tokenResponse: AccessToken | null = await credential.getToken(['https://ossrdbms-aad.database.windows.net/.default']);
+    return {
+        accessToken: tokenResponse?.token || '',
+        expiresInSeconds: (tokenResponse?.expiresOnTimestamp || 0) - Math.floor(Date.now() / 1000)
+    };
+};
 export function getClients(): { aiClient: AzureOpenAI; dbClient: MongoClient } {
     const apiKey = process.env.AZURE_OPENAI_EMBEDDING_KEY!;
     const apiVersion = process.env.AZURE_OPENAI_EMBEDDING_API_VERSION!;
@@ -49,6 +39,51 @@ export function getClients(): { aiClient: AzureOpenAI; dbClient: MongoClient } {
 
     return { aiClient, dbClient };
 }
+
+export function getClientsPasswordless(): { aiClient: AzureOpenAI | null; dbClient: MongoClient | null } {
+    let aiClient: AzureOpenAI | null = null;
+    let dbClient: MongoClient | null = null;
+
+    // For Azure OpenAI with DefaultAzureCredential
+    const apiVersion = process.env.AZURE_OPENAI_EMBEDDING_API_VERSION!;
+    const endpoint = process.env.AZURE_OPENAI_EMBEDDING_ENDPOINT!;
+    const deployment = process.env.AZURE_OPENAI_EMBEDDING_MODEL!;
+
+    if (apiVersion && endpoint && deployment) {
+        const credential = new DefaultAzureCredential();
+        const scope = "https://cognitiveservices.azure.com/.default";
+        const azureADTokenProvider = getBearerTokenProvider(credential, scope);
+        aiClient = new AzureOpenAI({
+            apiVersion,
+            endpoint,
+            deployment,
+            azureADTokenProvider
+        });
+    }
+
+    // For Cosmos DB with DefaultAzureCredential
+    const clusterName = process.env.MONGO_CLUSTER_NAME!;
+
+    if (clusterName) {
+        const credential = new DefaultAzureCredential();
+
+        dbClient = new MongoClient(
+            `mongodb+srv://${clusterName}.global.mongocluster.cosmos.azure.com/`, {
+            connectTimeoutMS: 30000,
+            tls: true,
+            retryWrites: true,
+            authMechanism: 'MONGODB-OIDC',
+            authMechanismProperties: {
+                OIDC_CALLBACK: (params: OIDCCallbackParams) => AzureIdentityTokenCallback(params, credential),
+                ALLOWED_HOSTS: ['*.azure.com']
+            }
+        }
+        );
+    }
+
+    return { aiClient, dbClient };
+}
+
 export async function readFileReturnJson(filePath: string): Promise<JsonData[]> {
 
     console.log(`Reading JSON file from ${filePath}`);
@@ -112,62 +147,20 @@ export async function insertData(config, collection, data) {
     return { total: data.length, inserted, updated, skipped, failed };
 }
 
-export function printSearchResults(insertSummary, indexSummary, searchResults, vectorType) {
-    console.log(`--- Summary ${vectorType} ---`);
-    console.log(`Data Load: ${JSON.stringify(insertSummary)}`);
-    console.log(`Index Creation: ${JSON.stringify(indexSummary)}`);
-    
+export function printSearchResults(insertSummary, indexSummary, searchResults) {
+
+
     if (!searchResults || searchResults.length === 0) {
         console.log('No search results found.');
         return;
     }
-    
-    // Get the score property configuration based on vector type
-    const scoreConfig = scoreProperty[vectorType.toLowerCase()];
-    
-    if (!scoreConfig) {
-        console.error(`Unknown vector type: ${vectorType}`);
-        return;
-    }
-    
-    // Process results based on the vector type
-    let processedResults = searchResults;
-    
-    // For IVF, we need to process the results differently as they come in a different format
-    if (vectorType.toLowerCase() === 'ivf') {
-        processedResults = searchResults.map(result => {
-            // Extract the document and score
-            const { document, score } = result as any;
-            
-            // Return combined object with all document fields and score
-            return {
-                ...document,
-                score
-            };
-        });
-    }
-    
-    // Print results with appropriate score access based on configuration
-    processedResults.forEach((result, index) => {
-        let score;
-        
-        // IVF
-        if (scoreConfig.inDoc) {
-            // Score is nested within a property (like __cosmos_meta__.score)
-            if (scoreConfig.nestedProperty) {
-                score = result[scoreConfig.property][scoreConfig.nestedProperty];
-            } else {
-                score = result[scoreConfig.property];
-            }
-        } else {
 
-            // DiskANN and HNSW
+    searchResults.map((result, index) => {
 
-            // Score is directly on the result object
-            score = result[scoreConfig.property];
-        }
-        
-        console.log(`${index + 1}. HotelName: ${result.HotelName}, Score: ${score.toFixed(4)}`);
-        //console.log(`   Description: ${result.Description}`);
+        const { document, score } = result as any;
+
+        console.log(`${index + 1}. HotelName: ${document.HotelName}, Score: ${score.toFixed(4)}`);
+        //console.log(`   Description: ${document.Description}`);
     });
+
 }

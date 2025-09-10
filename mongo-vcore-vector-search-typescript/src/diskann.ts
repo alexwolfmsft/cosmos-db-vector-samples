@@ -1,5 +1,5 @@
 import path from 'path';
-import { readFileReturnJson, getClients, insertData, printSearchResults } from './utils.js';
+import { readFileReturnJson, getClientsPasswordless, insertData, printSearchResults } from './utils.js';
 
 // ESM specific features - create __dirname equivalent
 import { fileURLToPath } from "node:url";
@@ -8,13 +8,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const config = {
-    query: "find a hotel by a lake with a mountain view",
+    query: "quintessential lodging near running trails, eateries, retail",
     dbName: "Hotels",
-    collectionName: "hotels_hnsw",
-    indexName: "vectorIndex_hnsw",
+    collectionName: "hotels_diskann",
+    indexName: "vectorIndex_diskann",
     dataFile: process.env.DATA_FILE_WITH_VECTORS!,
     batchSize: parseInt(process.env.LOAD_SIZE_BATCH! || '100', 10),
-    embeddingField: process.env.EMBEDDED_FIELD!,
     embeddedField: process.env.EMBEDDED_FIELD!,
     embeddingDimensions: parseInt(process.env.EMBEDDING_DIMENSIONS!, 10),
     deployment: process.env.AZURE_OPENAI_EMBEDDING_MODEL!,
@@ -22,9 +21,16 @@ const config = {
 
 async function main() {
 
-    const { aiClient, dbClient } = getClients();
+    const { aiClient, dbClient } = getClientsPasswordless();
 
     try {
+
+        if (!aiClient) {
+            throw new Error('AI client is not configured. Please check your environment variables.');
+        }
+        if (!dbClient) {
+            throw new Error('Database client is not configured. Please check your environment variables.');
+        }
 
         await dbClient.connect();
         const db = dbClient.db(config.dbName);
@@ -32,7 +38,8 @@ async function main() {
         console.log('Created collection:', config.collectionName);
         const data = await readFileReturnJson(path.join(__dirname, "..", config.dataFile));
         const insertSummary = await insertData(config, collection, data);
-
+        console.log('Created vector index:', config.indexName);
+        
         // Create the vector index
         const indexOptions = {
             createIndexes: config.collectionName,
@@ -43,17 +50,16 @@ async function main() {
                         [config.embeddedField]: 'cosmosSearch'
                     },
                     cosmosSearchOptions: {
-                        kind: 'vector-hnsw',
-                        m: 16, // 2 - 100, default = 16, number of connections per layer
-                        efConstruction: 64, // 4 - 1000, default=64, size of the dynamic candidate list for constructing the graph
+                        kind: 'vector-diskann',
+                        dimensions: config.embeddingDimensions,
                         similarity: 'COS', // 'COS', 'L2', 'IP'
-                        dimensions: config.embeddingDimensions
+                        maxDegree: 20, // 20 - 2048,  edges per node
+                        lBuild: 10 // 10 - 500, candidate neighbors evaluated
                     }
                 }
             ]
         };
         const vectorIndexSummary = await db.command(indexOptions);
-        console.log('Created vector index:', config.indexName);
 
         // Create embedding for the query
         const createEmbeddedForQueryResponse = await aiClient.embeddings.create({
@@ -83,14 +89,14 @@ async function main() {
         ]).toArray();
 
         // Print the results
-        printSearchResults(insertSummary, vectorIndexSummary, searchResults, 'hnsw');
+        printSearchResults(insertSummary, vectorIndexSummary, searchResults);
 
     } catch (error) {
         console.error('App failed:', error);
         process.exitCode = 1;
     } finally {
         console.log('Closing database connection...');
-        await dbClient.close();
+        if (dbClient) await dbClient.close();
         console.log('Database connection closed');
     }
 }
