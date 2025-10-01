@@ -41,7 +41,7 @@ public class VectorSearchService
         {
             _logger.LogInformation($"Starting {indexType} vector search workflow");
             
-            // Setup collection and load data if needed
+            // Setup collection
             var collectionSuffix = indexType switch 
             { 
                 VectorIndexType.IVF => "ivf", 

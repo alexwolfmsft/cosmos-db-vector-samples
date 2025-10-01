@@ -178,7 +178,6 @@ public class MongoDbService
     public async Task<int> LoadDataIfNeededAsync<T>(IMongoCollection<T> collection, string dataFilePath) where T : class
     {
         var existingDocCount = await collection.CountDocumentsAsync(Builders<T>.Filter.Empty);
-        _logger.LogInformation($"Collection '{collection.CollectionNamespace.CollectionName}' has {existingDocCount} existing documents");
 
         // Skip loading if collection already has data
         if (existingDocCount > 0)
