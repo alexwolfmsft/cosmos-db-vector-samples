@@ -1,5 +1,5 @@
 {
-  "name": "Cosmos DB MongoDB vCore Vector Search - .NET 8",
+  "name": "Azure DocumentDB Vector Search - .NET 8",
   "image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm",
   
   "features": {

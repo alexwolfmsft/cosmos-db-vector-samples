@@ -1,4 +1,4 @@
-namespace CosmosDbVectorSamples.Models;
+namespace DocumentDbVectorSamples.Models;
 
 public class AppConfiguration
 {
@@ -31,7 +31,7 @@ public class EmbeddingConfiguration
     public int BatchSize { get; set; }
 }
 
-public class MongoDBConfiguration
+public class AzureDocumentDbConfiguration
 {
     public string ConnectionString { get; set; } = string.Empty;
     public string ClusterName { get; set; } = string.Empty;

@@ -1,6 +1,6 @@
 using Azure.AI.OpenAI;
 using Azure.Identity;
-using CosmosDbVectorSamples.Models;
+using DocumentDbVectorSamples.Models;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 
-namespace CosmosDbVectorSamples.Services.VectorSearch;
+namespace DocumentDbVectorSamples.Services.VectorSearch;
 
 /// <summary>
 /// Service for performing vector similarity searches using different algorithms (IVF, HNSW, DiskANN).
