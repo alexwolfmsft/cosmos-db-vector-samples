@@ -5,7 +5,7 @@ public class AppConfiguration
     public AzureOpenAIConfiguration AzureOpenAI { get; set; } = new();
     public DataFilesConfiguration DataFiles { get; set; } = new();
     public EmbeddingConfiguration Embedding { get; set; } = new();
-    public AzureDocumentDbConfiguration MongoDB { get; set; } = new();
+    public MongoDBConfiguration MongoDB { get; set; } = new();
     public VectorSearchConfiguration VectorSearch { get; set; } = new();
 }
 
@@ -31,7 +31,7 @@ public class EmbeddingConfiguration
     public int BatchSize { get; set; }
 }
 
-public class AzureDocumentDbConfiguration
+public class MongoDBConfiguration
 {
     public string ConnectionString { get; set; } = string.Empty;
     public string ClusterName { get; set; } = string.Empty;
